@@ -1,0 +1,23 @@
+.background {
+  background-color: rgba(20 20 20 / 0.8);
+  pointer-events: all;
+  padding: 20px;
+  margin: 20px;
+  position: relative;
+  box-shadow: 0 0 10px rgb(0 0 0 / 40%);
+  font-size: var(--calcite-font-size--1);
+  width: min(max(30vw, 200px), 300px);
+  box-sizing: border-box;
+  flex: 0 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+}
+
+.scroll {
+  padding: 10px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
