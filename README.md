@@ -39,3 +39,7 @@ To build/deploy the app, you can simply run:
 npm run build
 ```
 
+## Docker
+1. docker build -t app .
+2. docker run --name app -p 3000:3000 -d app
+3. Your application should now be accessible at http://localhost:3000.
