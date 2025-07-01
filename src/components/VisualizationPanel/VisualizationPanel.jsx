@@ -15,6 +15,7 @@ import {
 import { variables } from '../../config';
 import { useEffect, useState } from 'react';
 import VoxelSlice from '@arcgis/core/layers/voxel/VoxelSlice';
+import PropTypes from 'prop-types';
 
 const getSlice = (orientation, value) => {
   switch (orientation) {
@@ -302,6 +303,29 @@ const VisualizationPanel = ({
       </div>
     </Background>
   );
+};
+
+VisualizationPanel.propTypes = {
+  selectedVariable: PropTypes.object.isRequired,
+  setSelectedVariable: PropTypes.func.isRequired,
+  selectedVisualization: PropTypes.string.isRequired,
+  setSelectedVisualization: PropTypes.func.isRequired,
+  exaggeration: PropTypes.number.isRequired,
+  setExaggeration: PropTypes.func.isRequired,
+  sections: PropTypes.array.isRequired,
+  setSections: PropTypes.func.isRequired,
+  continuousVariable: PropTypes.any,
+  isosurfaceInfo: PropTypes.any,
+  isosurfaceValue: PropTypes.any,
+  setIsosurfaceValue: PropTypes.func,
+  displayIsosurface: PropTypes.bool.isRequired,
+  setDisplayIsosurface: PropTypes.func.isRequired,
+  displaySections: PropTypes.bool.isRequired,
+  setDisplaySections: PropTypes.func.isRequired,
+  displaySlices: PropTypes.bool.isRequired,
+  setDisplaySlices: PropTypes.func.isRequired,
+  setSlices: PropTypes.func.isRequired,
+  dimensions: PropTypes.array.isRequired,
 };
 
 export default VisualizationPanel;

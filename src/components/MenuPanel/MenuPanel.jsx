@@ -3,17 +3,19 @@ import * as styles from './MenuPanel.module.css';
 import '@esri/calcite-components/dist/components/calcite-label';
 import '@esri/calcite-components/dist/components/calcite-switch';
 import { CalciteLabel, CalciteSwitch } from '@esri/calcite-components-react';
+import { useUIContext } from '../../UIContext';
+import PropTypes from 'prop-types';
 
-const Menu = ({
-  legendInfo,
-  setLegendInfo,
-  setEnableGrid,
-  enableGrid,
-  displayLegend,
-  setDisplayLegend,
-  displayFault,
-  setDisplayFault
-}) => {
+const Menu = ({ legendInfo, setLegendInfo }) => {
+  const {
+    enableGrid,
+    setEnableGrid,
+    displayLegend,
+    setDisplayLegend,
+    displayFault,
+    setDisplayFault
+  } = useUIContext();
+
   return (
     <Background title='' size='small'>
       <div className={styles.variableInfo}>
@@ -62,6 +64,11 @@ const Menu = ({
       </div>
     </Background>
   );
+};
+
+Menu.propTypes = {
+  legendInfo: PropTypes.any,
+  setLegendInfo: PropTypes.func,
 };
 
 export default Menu;
