@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import PropTypes from 'prop-types';
 import * as styles from './Legend.module.css';
 
 const createGradient = (colors) => {
@@ -44,6 +45,15 @@ const Chip = ({ index, color, enabled, onClick, value, label }) => {
   );
 };
 
+Chip.propTypes = {
+  index: PropTypes.number,
+  color: PropTypes.string.isRequired,
+  enabled: PropTypes.bool,
+  onClick: PropTypes.func,
+  value: PropTypes.any,
+  label: PropTypes.string,
+};
+
 const ContinuousLegend = ({ colors }) => {
   const divRef = useRef(null);
   useEffect(() => {
@@ -58,6 +68,10 @@ const ContinuousLegend = ({ colors }) => {
       <div ref={divRef} className={styles.gradient}></div>
     </div>
   );
+};
+
+ContinuousLegend.propTypes = {
+  colors: PropTypes.array.isRequired,
 };
 
 const DiscreteLegend = ({ uniqueValues, uniqueValuesChanged }) => {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
+import PropTypes from 'prop-types';
 
 const VoxelLayer = ({
   selectedVariable,
@@ -193,6 +194,28 @@ const VoxelLayer = ({
   }, [mapView]);
 
   return null;
+};
+
+VoxelLayer.propTypes = {
+  selectedVariable: PropTypes.object.isRequired,
+  selectedVisualization: PropTypes.string.isRequired,
+  exaggeration: PropTypes.number.isRequired,
+  mapView: PropTypes.any,
+  continuousVariable: PropTypes.any,
+  setContinuousVariable: PropTypes.func.isRequired,
+  setIsosurfaceInfo: PropTypes.func.isRequired,
+  sections: PropTypes.array.isRequired,
+  setSections: PropTypes.func.isRequired,
+  displayIsosurface: PropTypes.bool.isRequired,
+  isosurfaceValue: PropTypes.any,
+  setIsosurfaceValue: PropTypes.func.isRequired,
+  displaySections: PropTypes.bool.isRequired,
+  displaySlices: PropTypes.bool.isRequired,
+  slices: PropTypes.array.isRequired,
+  dimensions: PropTypes.array.isRequired,
+  setDimensions: PropTypes.func.isRequired,
+  legendInfo: PropTypes.any,
+  setLegendInfo: PropTypes.func.isRequired,
 };
 
 export default VoxelLayer;

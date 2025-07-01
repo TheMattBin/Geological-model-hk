@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useUIContext } from '../../UIContext';
+import PropTypes from 'prop-types';
 
-const FaultLayer = ({ displayFault, mapView }) => {
+const FaultLayer = ({ mapView }) => {
+  const { displayFault } = useUIContext();
   const [layer, setLayer] = useState(null);
 
   useEffect(() => {
@@ -17,6 +20,10 @@ const FaultLayer = ({ displayFault, mapView }) => {
   }, [mapView]);
 
   return null;
+};
+
+FaultLayer.propTypes = {
+  mapView: PropTypes.any,
 };
 
 export default FaultLayer;

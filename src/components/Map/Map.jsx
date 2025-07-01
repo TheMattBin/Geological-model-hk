@@ -3,6 +3,7 @@ import {useRef, useEffect, useState, Children, cloneElement} from "react";
 import SceneView from "@arcgis/core/views/SceneView";
 import WebScene from "@arcgis/core/WebScene";
 import {mapConfig} from "../../config";
+import PropTypes from 'prop-types';
 
 const getSidePadding = () => {
   return Math.min(Math.max(window.innerWidth * 0.3, 200), 300);
@@ -64,6 +65,10 @@ const Map = ({children}) => {
       })}
     </>
   );
+};
+
+Map.propTypes = {
+  children: PropTypes.node,
 };
 
 export default Map;

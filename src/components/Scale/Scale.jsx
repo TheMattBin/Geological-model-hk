@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Point, Polyline, SpatialReference } from '@arcgis/core/geometry';
 import Graphic from '@arcgis/core/Graphic';
+import PropTypes from 'prop-types';
 // ETRS 1989 UTM Zone 32N
 const spatialReference = new SpatialReference({ wkid: 102328 });
 
@@ -157,6 +158,11 @@ const Scale = ({ exaggeration, mapView }) => {
   }, [mapView, exaggeration]);
 
   return null;
+};
+
+Scale.propTypes = {
+  mapView: PropTypes.any,
+  exaggeration: PropTypes.number.isRequired,
 };
 
 export default Scale;

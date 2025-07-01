@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useUIContext } from '../../UIContext';
 import DimensionLayer from '@arcgis/core/layers/DimensionLayer';
 import DimensionAnalysis from '@arcgis/core/analysis/DimensionAnalysis';
 import LengthDimension from '@arcgis/core/analysis/LengthDimension';
@@ -7,13 +8,15 @@ import { Point, SpatialReference, Extent } from '@arcgis/core/geometry';
 import MediaLayer from '@arcgis/core/layers/MediaLayer';
 import ImageElement from '@arcgis/core/layers/support/ImageElement';
 import ExtentAndRotationGeoreference from '@arcgis/core/layers/support/ExtentAndRotationGeoreference';
+import PropTypes from 'prop-types';
 
 // ETRS 1989 UTM Zone 32N
 const spatialReference = new SpatialReference({ wkid: 102328 });
 const alpha = 0.4;
 const offset = -70;
 
-const Grid = ({ mapView, enableGrid }) => {
+const Grid = ({ mapView }) => {
+  const { enableGrid } = useUIContext();
   const [gridLayer, setGridLayer] = useState(null);
   const [dimensionLayer, setDimensionLayer] = useState(null);
   useEffect(() => {
@@ -74,6 +77,10 @@ const Grid = ({ mapView, enableGrid }) => {
   }, [mapView]);
 
   return null;
+};
+
+Grid.propTypes = {
+  mapView: PropTypes.any
 };
 
 export default Grid;

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { UIProvider } from '../UIContext';
 import { Map, Title, MenuPanel, VisualizationPanel, VoxelLayer, Scale, Grid, Fault } from '../components';
 import { variables } from '../config';
 import * as styles from './App.module.css';
@@ -21,7 +22,7 @@ export const App = () => {
   const [displayLegend, setDisplayLegend] = useState(true);
   const [displayFault, setDisplayFault] = useState(true);
   return (
-    <>
+    <UIProvider>
       <Map>
         <VoxelLayer
           selectedVariable={selectedVariable}
@@ -44,9 +45,9 @@ export const App = () => {
           legendInfo={legendInfo}
           setLegendInfo={setLegendInfo}
         ></VoxelLayer>
-        <Fault displayFault={displayFault}></Fault>
+        <Fault />
         <Scale exaggeration={exaggeration}></Scale>
-        <Grid enableGrid={enableGrid}></Grid>
+        <Grid />
       </Map>
       <div className={styles.appLayout}>
         <header className={styles.appTitle}>
@@ -54,16 +55,7 @@ export const App = () => {
         </header>
         <div className={styles.appContent}>
           <div className={styles.leftPane}>
-            <MenuPanel
-              legendInfo={legendInfo}
-              setLegendInfo={setLegendInfo}
-              setEnableGrid={setEnableGrid}
-              enableGrid={enableGrid}
-              displayLegend={displayLegend}
-              setDisplayLegend={setDisplayLegend}
-              displayFault={displayFault}
-              setDisplayFault={setDisplayFault}
-            ></MenuPanel>
+            <MenuPanel legendInfo={legendInfo} setLegendInfo={setLegendInfo} />
           </div>
           <div className={styles.rightPane}>
             <VisualizationPanel
@@ -87,7 +79,7 @@ export const App = () => {
               setDisplaySlices={setDisplaySlices}
               setSlices={setSlices}
               dimensions={dimensions}
-            ></VisualizationPanel>
+            />
           </div>
         </div>
         <footer className={styles.appFooter}>
@@ -109,6 +101,6 @@ export const App = () => {
           </p>
         </footer>
       </div>
-    </>
+    </UIProvider>
   );
 };
