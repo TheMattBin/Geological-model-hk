@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { UIProvider } from '../UIContext';
+import { UIProvider } from '../UIContext.jsx';
 import { Map, Title, MenuPanel, VisualizationPanel, VoxelLayer, Scale, Grid, Fault } from '../components';
+import ErrorBoundary from '../components/ErrorBoundary/ErrorBoundary';
 import { variables } from '../config';
 import * as styles from './App.module.css';
 
@@ -23,42 +24,47 @@ export const App = () => {
   const [displayFault, setDisplayFault] = useState(true);
   return (
     <UIProvider>
-      <Map>
-        <VoxelLayer
-          selectedVariable={selectedVariable}
-          selectedVisualization={selectedVisualization}
-          exaggeration={exaggeration}
-          continuousVariable={continuousVariable}
-          setContinuousVariable={setContinuousVariable}
-          isosurfaceInfo={isosurfaceInfo}
-          setIsosurfaceInfo={setIsosurfaceInfo}
-          isosurfaceValue={isosurfaceValue}
-          setIsosurfaceValue={setIsosurfaceValue}
-          displayIsosurface={displayIsosurface}
-          sections={sections}
-          setSections={setSections}
-          displaySections={displaySections}
-          displaySlices={displaySlices}
-          slices={slices}
-          dimensions={dimensions}
-          setDimensions={setDimensions}
-          legendInfo={legendInfo}
-          setLegendInfo={setLegendInfo}
-        ></VoxelLayer>
-        <Fault />
-        <Scale exaggeration={exaggeration}></Scale>
-        <Grid />
-      </Map>
+      <ErrorBoundary>
+        <Map>
+          <VoxelLayer
+            selectedVariable={selectedVariable}
+            selectedVisualization={selectedVisualization}
+            exaggeration={exaggeration}
+            continuousVariable={continuousVariable}
+            setContinuousVariable={setContinuousVariable}
+            isosurfaceInfo={isosurfaceInfo}
+            setIsosurfaceInfo={setIsosurfaceInfo}
+            isosurfaceValue={isosurfaceValue}
+            setIsosurfaceValue={setIsosurfaceValue}
+            displayIsosurface={displayIsosurface}
+            sections={sections}
+            setSections={setSections}
+            displaySections={displaySections}
+            displaySlices={displaySlices}
+            slices={slices}
+            dimensions={dimensions}
+            setDimensions={setDimensions}
+            legendInfo={legendInfo}
+            setLegendInfo={setLegendInfo}
+          ></VoxelLayer>
+          <Fault />
+          <Scale exaggeration={exaggeration}></Scale>
+          <Grid />
+        </Map>
+      </ErrorBoundary>
       <div className={styles.appLayout}>
         <header className={styles.appTitle}>
           <Title text='Hong Kong Geological Model' size='large'></Title>
         </header>
         <div className={styles.appContent}>
           <div className={styles.leftPane}>
-            <MenuPanel legendInfo={legendInfo} setLegendInfo={setLegendInfo} />
+            <ErrorBoundary>
+              <MenuPanel legendInfo={legendInfo} setLegendInfo={setLegendInfo} />
+            </ErrorBoundary>
           </div>
           <div className={styles.rightPane}>
-            <VisualizationPanel
+            <ErrorBoundary>
+              <VisualizationPanel
               selectedVariable={selectedVariable}
               setSelectedVariable={setSelectedVariable}
               selectedVisualization={selectedVisualization}
@@ -80,6 +86,7 @@ export const App = () => {
               setSlices={setSlices}
               dimensions={dimensions}
             />
+            </ErrorBoundary>
           </div>
         </div>
         <footer className={styles.appFooter}>

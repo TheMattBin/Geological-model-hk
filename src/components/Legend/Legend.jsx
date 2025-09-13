@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import * as styles from './Legend.module.css';
 
@@ -134,4 +134,4 @@ const LegendContainer = ({ legendInfo, setLegendInfo }) => {
   );
 };
 
-export default LegendContainer;
+export default React.memo(LegendContainer);

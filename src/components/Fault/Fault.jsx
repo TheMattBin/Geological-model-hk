@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useUIContext } from '../../UIContext';
+import React, { useEffect, useState } from 'react';
+import { useUIContext } from '../../UIContext.jsx';
 import PropTypes from 'prop-types';
 
 const FaultLayer = ({ mapView }) => {
@@ -26,4 +26,4 @@ FaultLayer.propTypes = {
   mapView: PropTypes.any,
 };
 
-export default FaultLayer;
+export default React.memo(FaultLayer);

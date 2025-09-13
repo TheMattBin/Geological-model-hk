@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useUIContext } from '../../UIContext';
+import React, { useEffect, useState } from 'react';
+import { useUIContext } from '../../UIContext.jsx';
 import DimensionLayer from '@arcgis/core/layers/DimensionLayer';
 import DimensionAnalysis from '@arcgis/core/analysis/DimensionAnalysis';
 import LengthDimension from '@arcgis/core/analysis/LengthDimension';
@@ -83,4 +83,4 @@ Grid.propTypes = {
   mapView: PropTypes.any
 };
 
-export default Grid;
+export default React.memo(Grid);

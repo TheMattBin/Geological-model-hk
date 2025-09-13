@@ -3,7 +3,7 @@ import * as styles from './MenuPanel.module.css';
 import '@esri/calcite-components/dist/components/calcite-label';
 import '@esri/calcite-components/dist/components/calcite-switch';
 import { CalciteLabel, CalciteSwitch } from '@esri/calcite-components-react';
-import { useUIContext } from '../../UIContext';
+import { useUIContext } from '../../UIContext.jsx';
 import PropTypes from 'prop-types';
 
 const Menu = ({ legendInfo, setLegendInfo }) => {

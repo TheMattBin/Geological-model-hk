@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Point, Polyline, SpatialReference } from '@arcgis/core/geometry';
 import Graphic from '@arcgis/core/Graphic';
 import PropTypes from 'prop-types';
@@ -165,4 +165,4 @@ Scale.propTypes = {
   exaggeration: PropTypes.number.isRequired,
 };
 
-export default Scale;
+export default React.memo(Scale);
