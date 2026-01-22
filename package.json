@@ -27,8 +27,8 @@
     "vite": "^6.4.1"
   },
   "dependencies": {
-    "@arcgis/core": "^4.30.9",
-    "@esri/calcite-components-react": "^0.34.0",
+    "@arcgis/core": "^4.34.8",
+    "@esri/calcite-components-react": "^3.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }
