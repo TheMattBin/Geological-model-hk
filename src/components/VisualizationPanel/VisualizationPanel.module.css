@@ -22,3 +22,122 @@
   width: 120px;
   padding: 10px 0 0 0;
 }
+
+/* Three.js version styles */
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 14px;
+}
+
+.radio {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #6b7280;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.radio:checked {
+  border-color: #3b82f6;
+}
+
+.radio:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+}
+
+.switchLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.toggleSwitch {
+  appearance: none;
+  width: 40px;
+  height: 20px;
+  background: #4b5563;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggleSwitch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggleSwitch:checked {
+  background: #3b82f6;
+}
+
+.toggleSwitch:checked::after {
+  transform: translateX(20px);
+}
+
+.slider {
+  width: 100%;
+  height: 6px;
+  background: #4b5563;
+  border-radius: 3px;
+  appearance: none;
+  cursor: pointer;
+  margin: 8px 0;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: grab;
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  border: none;
+  cursor: grab;
+}
+
+.sliderValue {
+  color: #9ca3af;
+  font-size: 12px;
+  margin-left: 8px;
+}

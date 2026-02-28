@@ -2,9 +2,48 @@ import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import * as styles from './Legend.module.css';
 
+/**
+ * Convert RGBA array to CSS color string
+ */
+const rgbaToCss = (color) => {
+  if (typeof color === 'string') return color;
+  if (Array.isArray(color)) {
+    const [r, g, b, a = 255] = color;
+    return `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+  }
+  if (color && typeof color === 'object') {
+    const { r, g, b, a = 255 } = color;
+    return `rgba(${r}, ${g}, ${b}, ${(a ?? 255) / 255})`;
+  }
+  return '#888';
+};
+
+/**
+ * Convert color to hex string
+ */
+const colorToHex = (color) => {
+  if (typeof color === 'string') return color;
+  if (Array.isArray(color)) {
+    const [r, g, b] = color;
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+  if (color && typeof color === 'object') {
+    const { r, g, b } = color;
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+  return '#888888';
+};
+
+/**
+ * Create CSS gradient from color stops
+ */
 const createGradient = (colors) => {
+  if (!colors || colors.length === 0) return 'linear-gradient(90deg, #333, #fff)';
+  
   const gradientColors = colors.map((c) => {
-    return `${c.color.toHex()} ${c.position * 100}%`;
+    const hex = colorToHex(c.color);
+    const position = (c.position ?? 0) * 100;
+    return `${hex} ${position}%`;
   });
   return `linear-gradient(90deg, ${gradientColors.join(', ')})`;
 };
@@ -12,25 +51,21 @@ const createGradient = (colors) => {
 const Chip = ({ index, color, enabled, onClick, value, label }) => {
   const [hovered, setHovered] = useState(false);
 
-  const handleMouseEnter = () => {
-    setHovered(true);
-  };
+  const handleMouseEnter = () => setHovered(true);
+  const handleMouseLeave = () => setHovered(false);
 
-  const handleMouseLeave = () => {
-    setHovered(false);
-  };
-
+  const cssColor = rgbaToCss(color);
   let backgroundColor;
   if (enabled) {
-    backgroundColor = hovered ? 'transparent' : color;
+    backgroundColor = hovered ? 'transparent' : cssColor;
   } else {
-    backgroundColor = hovered ? color : 'transparent';
+    backgroundColor = hovered ? cssColor : 'transparent';
   }
 
   return (
     <button
       key={index}
-      style={{ backgroundColor, border: `1.5px solid ${color}` }}
+      style={{ backgroundColor, border: `1.5px solid ${cssColor}` }}
       className={styles.chip}
       datavalue={value}
       onClick={(evt) => {
@@ -47,7 +82,7 @@ const Chip = ({ index, color, enabled, onClick, value, label }) => {
 
 Chip.propTypes = {
   index: PropTypes.number,
-  color: PropTypes.string.isRequired,
+  color: PropTypes.any.isRequired,
   enabled: PropTypes.bool,
   onClick: PropTypes.func,
   value: PropTypes.any,
@@ -56,6 +91,7 @@ Chip.propTypes = {
 
 const ContinuousLegend = ({ colors }) => {
   const divRef = useRef(null);
+  
   useEffect(() => {
     if (divRef.current && colors && colors.length > 0) {
       divRef.current.style.background = createGradient(colors);
@@ -85,6 +121,7 @@ const DiscreteLegend = ({ uniqueValues, uniqueValuesChanged }) => {
     });
     uniqueValuesChanged(newUniqueValues);
   };
+  
   return uniqueValues.map((uv, index) => (
     <Chip
       enabled={uv.enabled}
@@ -93,11 +130,19 @@ const DiscreteLegend = ({ uniqueValues, uniqueValuesChanged }) => {
       value={uv.value}
       onClick={toggleVisibility}
       label={uv.label}
-    ></Chip>
+    />
   ));
 };
 
-const LegendContainer = ({ legendInfo, setLegendInfo }) => {
+DiscreteLegend.propTypes = {
+  uniqueValues: PropTypes.array.isRequired,
+  uniqueValuesChanged: PropTypes.func.isRequired,
+};
+
+/**
+ * Legend component
+ */
+const Legend = ({ legendInfo, setLegendInfo }) => {
   return (
     <div className={styles.container}>
       {legendInfo ? (
@@ -106,14 +151,14 @@ const LegendContainer = ({ legendInfo, setLegendInfo }) => {
           {legendInfo.continuous ? (
             <div>
               <div className={styles.labels}>
-                <div>&gt;{legendInfo.range[0].toFixed(2)}</div>
-                <div>&lt;{legendInfo.range[1].toFixed(2)}</div>
+                <div>&gt;{Array.isArray(legendInfo.range) ? legendInfo.range[0].toFixed(2) : '0.00'}</div>
+                <div>&lt;{Array.isArray(legendInfo.range) ? legendInfo.range[1].toFixed(2) : '1.00'}</div>
               </div>
-              <ContinuousLegend colors={legendInfo.colorStops}></ContinuousLegend>
+              <ContinuousLegend colors={legendInfo.colorStops} />
             </div>
           ) : (
             <DiscreteLegend
-              uniqueValues={legendInfo.uniqueValues}
+              uniqueValues={legendInfo.uniqueValues || []}
               uniqueValuesChanged={(uv) => {
                 if (uv) {
                   setLegendInfo({
@@ -124,14 +169,19 @@ const LegendContainer = ({ legendInfo, setLegendInfo }) => {
                   });
                 }
               }}
-            ></DiscreteLegend>
+            />
           )}
         </div>
       ) : (
-        <div>Building legend..</div>
+        <div>Building legend...</div>
       )}
     </div>
   );
 };
 
-export default React.memo(LegendContainer);
+Legend.propTypes = {
+  legendInfo: PropTypes.object,
+  setLegendInfo: PropTypes.func,
+};
+
+export default React.memo(Legend);

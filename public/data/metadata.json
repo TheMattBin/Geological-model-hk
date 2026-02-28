@@ -1,0 +1,142 @@
+{
+  "dimensions": {
+    "x": 64,
+    "y": 64,
+    "z": 32
+  },
+  "bounds": {
+    "x": {
+      "min": 0,
+      "max": 1000
+    },
+    "y": {
+      "min": 0,
+      "max": 1000
+    },
+    "z": {
+      "min": -500,
+      "max": 0
+    }
+  },
+  "variables": [
+    {
+      "id": 0,
+      "name": "Lithology",
+      "file": "lithology.raw",
+      "dtype": "uint8",
+      "type": "discrete",
+      "numClasses": 5,
+      "colormap": [
+        {
+          "value": 0,
+          "label": "Clay",
+          "color": [
+            139,
+            90,
+            43,
+            255
+          ]
+        },
+        {
+          "value": 1,
+          "label": "Sand",
+          "color": [
+            255,
+            223,
+            128,
+            255
+          ]
+        },
+        {
+          "value": 2,
+          "label": "Gravel",
+          "color": [
+            169,
+            169,
+            169,
+            255
+          ]
+        },
+        {
+          "value": 3,
+          "label": "Silt",
+          "color": [
+            194,
+            178,
+            128,
+            255
+          ]
+        },
+        {
+          "value": 4,
+          "label": "Fault",
+          "color": [
+            255,
+            0,
+            0,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Permeability",
+      "file": "permeability.raw",
+      "dtype": "uint8",
+      "type": "continuous",
+      "unit": "md",
+      "range": {
+        "min": 0,
+        "max": 1
+      },
+      "colormap": [
+        {
+          "position": 0.0,
+          "color": [
+            0,
+            0,
+            128,
+            255
+          ]
+        },
+        {
+          "position": 0.25,
+          "color": [
+            0,
+            128,
+            255,
+            255
+          ]
+        },
+        {
+          "position": 0.5,
+          "color": [
+            0,
+            255,
+            128,
+            255
+          ]
+        },
+        {
+          "position": 0.75,
+          "color": [
+            255,
+            255,
+            0,
+            255
+          ]
+        },
+        {
+          "position": 1.0,
+          "color": [
+            255,
+            0,
+            0,
+            255
+          ]
+        }
+      ]
+    }
+  ]
+}

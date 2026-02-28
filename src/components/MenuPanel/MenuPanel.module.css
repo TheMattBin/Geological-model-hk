@@ -13,11 +13,57 @@
 .overviewMap {
   display: flex;
   gap: 10px;
-  font-size: var(--calcite-font-size--2);
+  font-size: 12px;
   line-height: 1.1rem;
   font-style: italic;
 }
 
 .overviewMap img {
   max-height: 100px;
+}
+
+.layerVisibility {
+  padding: 4px 0;
+}
+
+/* Three.js version styles */
+.switchLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.toggleSwitch {
+  appearance: none;
+  width: 40px;
+  height: 20px;
+  background: #4b5563;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggleSwitch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggleSwitch:checked {
+  background: #3b82f6;
+}
+
+.toggleSwitch:checked::after {
+  transform: translateX(20px);
 }

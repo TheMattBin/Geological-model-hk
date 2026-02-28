@@ -1,12 +1,13 @@
-import { Background, Legend } from '../index';
+import Background from '../Background/Background';
+import Legend from '../Legend/Legend';
 import * as styles from './MenuPanel.module.css';
-import '@esri/calcite-components/dist/components/calcite-label';
-import '@esri/calcite-components/dist/components/calcite-switch';
-import { CalciteLabel, CalciteSwitch } from '@esri/calcite-components-react';
 import { useUIContext } from '../../UIContext.jsx';
 import PropTypes from 'prop-types';
 
-const Menu = ({ legendInfo, setLegendInfo }) => {
+/**
+ * MenuPanel component
+ */
+const MenuPanel = ({ legendInfo, setLegendInfo }) => {
   const {
     enableGrid,
     setEnableGrid,
@@ -19,56 +20,53 @@ const Menu = ({ legendInfo, setLegendInfo }) => {
   return (
     <Background title='' size='small'>
       <div className={styles.variableInfo}>
-        <CalciteLabel
-          className={styles.label}
-          layout='inline-space-between'
-          onCalciteSwitchChange={(event) => {
-            setDisplayLegend(event.target.checked);
-          }}
-        >
-          Display legend
-          <CalciteSwitch scale='m' checked={displayLegend ? true : undefined}></CalciteSwitch>
-        </CalciteLabel>
-        {displayLegend ? <Legend legendInfo={legendInfo} setLegendInfo={setLegendInfo}></Legend> : <></>}
+        <label className={`${styles.label} ${styles.switchLabel}`}>
+          <span>Display legend</span>
+          <input
+            type="checkbox"
+            className={styles.toggleSwitch}
+            checked={displayLegend}
+            onChange={(e) => setDisplayLegend(e.target.checked)}
+          />
+        </label>
+        {displayLegend && <Legend legendInfo={legendInfo} setLegendInfo={setLegendInfo} />}
       </div>
       <div className={styles.layerVisibility}>
-        <CalciteLabel
-          className={styles.label}
-          layout='inline-space-between'
-          onCalciteSwitchChange={(event) => {
-            setEnableGrid(event.target.checked);
-          }}
-        >
-          Display grid
-          <CalciteSwitch scale='m' checked={enableGrid ? true : undefined}></CalciteSwitch>
-        </CalciteLabel>
+        <label className={`${styles.label} ${styles.switchLabel}`}>
+          <span>Display grid</span>
+          <input
+            type="checkbox"
+            className={styles.toggleSwitch}
+            checked={enableGrid}
+            onChange={(e) => setEnableGrid(e.target.checked)}
+          />
+        </label>
       </div>
       <div className={styles.layerVisibility}>
-        <CalciteLabel
-          className={styles.label}
-          layout='inline-space-between'
-          onCalciteSwitchChange={(event) => {
-            setDisplayFault(event.target.checked);
-          }}
-        >
-          Display fault
-          <CalciteSwitch scale='m' checked={displayFault ? true : undefined}></CalciteSwitch>
-        </CalciteLabel>
+        <label className={`${styles.label} ${styles.switchLabel}`}>
+          <span>Display fault</span>
+          <input
+            type="checkbox"
+            className={styles.toggleSwitch}
+            checked={displayFault}
+            onChange={(e) => setDisplayFault(e.target.checked)}
+          />
+        </label>
       </div>
       <div className='separator'></div>
       <div className={styles.overviewMap}>
         <div>Geological model displaying soil lithology in Hong Kong.</div>
         <div>
-          <img src='./assets/hk-overview.png'></img>
+          <img src='./assets/hk-overview.png' alt="Hong Kong overview" />
         </div>
       </div>
     </Background>
   );
 };
 
-Menu.propTypes = {
+MenuPanel.propTypes = {
   legendInfo: PropTypes.any,
   setLegendInfo: PropTypes.func,
 };
 
-export default Menu;
+export default MenuPanel;

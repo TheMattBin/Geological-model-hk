@@ -1,4 +1,6 @@
-@import 'https://js.arcgis.com/4.23/@arcgis/core/assets/esri/themes/dark/main.css';
+/**
+ * Main CSS for Three.js version (no ArcGIS/Calcite dependencies)
+ */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap');
 
 html,
@@ -8,39 +10,27 @@ body,
   margin: 0;
   height: 100%;
   width: 100%;
-  font-family: var(--calcite-sans-family);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   color: white;
 }
+
 body {
   background: radial-gradient(#a3a8aa, #111111);
 }
 
-.calcite-theme-dark,
 :root {
-  --calcite-ui-brand: rgb(255, 255, 255);
-  --calcite-ui-brand-hover: rgb(175, 175, 175);
-  --calcite-ui-border-2: rgba(255, 255, 255, 0.6);
+  --ui-brand: rgb(255, 255, 255);
+  --ui-brand-hover: rgb(175, 175, 175);
+  --ui-border: rgba(255, 255, 255, 0.6);
   --border-radius: 10px;
   --box-shadow: 0 1px 4px rgb(0 0 0 / 80%);
   --padding: 25px;
   --mobile-font-size: 12px;
   --font-size: 14px;
-}
-
-.esri-widget {
-  background: none !important;
-}
-
-.esri-widget__heading.esri-legend__service-label {
-  display: none !important;
-}
-
-.esri-legend__service {
-  padding: 0;
+  --bg-panel: rgba(30, 30, 40, 0.9);
 }
 
 /* scrollbar styles */
-
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -50,32 +40,49 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(238 143 31 / 0.1);
+  background: rgba(238, 143, 31, 0.1);
   border: none;
   border-radius: var(--border-radius);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(238 143 31 / 0.8);
+  background: rgba(238, 143, 31, 0.8);
 }
 
 .separator:before {
   content: '';
   width: 50%;
   margin: 10px auto;
-  border-top: 1px solid rgba(255 255 255 / 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
   display: block;
   padding: 0 0 10px 0;
 }
 
 a {
-  color: var(--calcite-ui-brand);
+  color: var(--ui-brand);
   text-decoration: none;
-  border-bottom: 1px solid var(--calcite-ui-brand);
+  border-bottom: 1px solid var(--ui-brand);
 }
 
 a:hover {
   cursor: pointer;
-  color: var(--calcite-ui-brand-hover);
-  border-bottom: 1px solid var(--calcite-ui-brand-hover);
+  color: var(--ui-brand-hover);
+  border-bottom: 1px solid var(--ui-brand-hover);
+}
+
+/* Form elements base styles */
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}
+
+input[type="range"] {
+  cursor: pointer;
+}
+
+/* Focus styles */
+input:focus,
+button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }

@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import { UIProvider } from '../UIContext.jsx';
-import { Map, Title, MenuPanel, VisualizationPanel, VoxelLayer, Scale, Grid, Fault } from '../components';
+import Scene3D from '../components/Scene3D/Scene3D';
+import Title from '../components/Title/Title';
+import MenuPanel from '../components/MenuPanel/MenuPanel';
+import VisualizationPanel from '../components/VisualizationPanel/VisualizationPanel';
+import VolumeController from '../components/VolumeController/VolumeController';
 import ErrorBoundary from '../components/ErrorBoundary/ErrorBoundary';
 import { variables } from '../config';
 import * as styles from './App.module.css';
 
+/**
+ * App component using Three.js for volume rendering
+ */
 export const App = () => {
   const [selectedVariable, setSelectedVariable] = useState(variables[0]);
-  const [selectedVisualization, setSelectedVisualization] = useState('volume');
   const [exaggeration, setExaggeration] = useState(15);
   const [legendInfo, setLegendInfo] = useState(null);
   const [sections, setSections] = useState([]);
@@ -16,19 +22,14 @@ export const App = () => {
   const [displayIsosurface, setDisplayIsosurface] = useState(false);
   const [isosurfaceValue, setIsosurfaceValue] = useState();
   const [displaySections, setDisplaySections] = useState(true);
-  const [displaySlices, setDisplaySlices] = useState(false);
-  const [slices, setSlices] = useState([]);
   const [dimensions, setDimensions] = useState([]);
-  const [enableGrid, setEnableGrid] = useState(true);
-  const [displayLegend, setDisplayLegend] = useState(true);
-  const [displayFault, setDisplayFault] = useState(true);
+
   return (
     <UIProvider>
       <ErrorBoundary>
-        <Map>
-          <VoxelLayer
+        <Scene3D dataPath="./data">
+          <VolumeController
             selectedVariable={selectedVariable}
-            selectedVisualization={selectedVisualization}
             exaggeration={exaggeration}
             continuousVariable={continuousVariable}
             setContinuousVariable={setContinuousVariable}
@@ -40,17 +41,12 @@ export const App = () => {
             sections={sections}
             setSections={setSections}
             displaySections={displaySections}
-            displaySlices={displaySlices}
-            slices={slices}
             dimensions={dimensions}
             setDimensions={setDimensions}
             legendInfo={legendInfo}
             setLegendInfo={setLegendInfo}
-          ></VoxelLayer>
-          <Fault />
-          <Scale exaggeration={exaggeration}></Scale>
-          <Grid />
-        </Map>
+          />
+        </Scene3D>
       </ErrorBoundary>
       <div className={styles.appLayout}>
         <header className={styles.appTitle}>
@@ -65,27 +61,22 @@ export const App = () => {
           <div className={styles.rightPane}>
             <ErrorBoundary>
               <VisualizationPanel
-              selectedVariable={selectedVariable}
-              setSelectedVariable={setSelectedVariable}
-              selectedVisualization={selectedVisualization}
-              setSelectedVisualization={setSelectedVisualization}
-              exaggeration={exaggeration}
-              setExaggeration={setExaggeration}
-              continuousVariable={continuousVariable}
-              isosurfaceInfo={isosurfaceInfo}
-              displayIsosurface={displayIsosurface}
-              setDisplayIsosurface={setDisplayIsosurface}
-              isosurfaceValue={isosurfaceValue}
-              setIsosurfaceValue={setIsosurfaceValue}
-              sections={sections}
-              setSections={setSections}
-              displaySections={displaySections}
-              setDisplaySections={setDisplaySections}
-              displaySlices={displaySlices}
-              setDisplaySlices={setDisplaySlices}
-              setSlices={setSlices}
-              dimensions={dimensions}
-            />
+                selectedVariable={selectedVariable}
+                setSelectedVariable={setSelectedVariable}
+                exaggeration={exaggeration}
+                setExaggeration={setExaggeration}
+                continuousVariable={continuousVariable}
+                isosurfaceInfo={isosurfaceInfo}
+                displayIsosurface={displayIsosurface}
+                setDisplayIsosurface={setDisplayIsosurface}
+                isosurfaceValue={isosurfaceValue}
+                setIsosurfaceValue={setIsosurfaceValue}
+                sections={sections}
+                setSections={setSections}
+                displaySections={displaySections}
+                setDisplaySections={setDisplaySections}
+                dimensions={dimensions}
+              />
             </ErrorBoundary>
           </div>
         </div>
@@ -111,3 +102,5 @@ export const App = () => {
     </UIProvider>
   );
 };
+
+export default App;

@@ -1,20 +1,31 @@
-# Use Node.js as the base image
-FROM node:20-alpine
+# Build stage
+FROM node:20-alpine AS build
 
-# Set the working directory in the container
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
-# Copy the rest of your application code
+# Copy source code
 COPY . .
 
-# Expose the port your app runs on (change if necessary)
-EXPOSE 3000
+# Build the application
+RUN npm run build
 
-# Command to run your application in development mode
-CMD ["npm", "run", "dev"]
+# Production stage
+FROM nginx:alpine
+
+# Copy built files to nginx
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
