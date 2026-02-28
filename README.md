@@ -122,18 +122,29 @@ python scripts/convert_netcdf.py your_data.nc --output-dir ./public/data
 docker build -t geological-model .
 
 # Run the container
-docker run --name geological-model -p 3000:3000 -d geological-model
+docker run --name geological-model -p 80:80 -d geological-model
 ```
 
 ### Access the Application
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost](http://localhost) in your browser.
+
+### Docker Hub (Optional)
+
+To enable automated Docker Hub publishing:
+1. Create secrets in your repository: `DOCKER_USERNAME` and `DOCKER_PASSWORD`
+2. Push a version tag (e.g., `v1.0.0`) to trigger the Docker workflow
 
 ## 🚀 Deployment Options
 
 ### GitHub Pages (Recommended)
 
-The application is automatically deployed to GitHub Pages via GitHub Actions when pushing to the main branch.
+The application is automatically deployed to GitHub Pages via GitHub Actions.
+
+**Setup required:**
+1. Go to Repository Settings → Pages
+2. Under "Build and deployment", set Source to **GitHub Actions**
+3. Push to the `main` branch to trigger deployment
 
 ### Manual Deployment
 
