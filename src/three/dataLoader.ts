@@ -41,7 +41,8 @@ export async function loadRawData(url: string): Promise<ArrayBuffer> {
 export function createVolumeTexture(
   data: ArrayBuffer,
   dimensions: { x: number; y: number; z: number },
-  dtype: 'uint8' | 'float32' = 'uint8'
+  dtype: 'uint8' | 'float32' = 'uint8',
+  discrete = false
 ): THREE.Data3DTexture {
   const { x, y, z } = dimensions;
   const expectedSize = x * y * z * (dtype === 'float32' ? 4 : 1);
@@ -65,8 +66,10 @@ export function createVolumeTexture(
   
   texture.format = THREE.RedFormat;
   texture.type = dtype === 'float32' ? THREE.FloatType : THREE.UnsignedByteType;
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
+  // Categorical lithology values must not be interpolated between classes;
+  // continuous variables benefit from trilinear interpolation.
+  texture.minFilter = discrete ? THREE.NearestFilter : THREE.LinearFilter;
+  texture.magFilter = discrete ? THREE.NearestFilter : THREE.LinearFilter;
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.wrapR = THREE.ClampToEdgeWrapping;
@@ -185,7 +188,7 @@ export async function loadVolume(
     const rawData = await loadRawData(dataUrl);
     
     // Create 3D texture
-    const texture = createVolumeTexture(rawData, metadata.dimensions, variable.dtype);
+    const texture = createVolumeTexture(rawData, metadata.dimensions, variable.dtype, variable.type === 'discrete');
     textures.set(variable.id, texture);
     
     // Create transfer function

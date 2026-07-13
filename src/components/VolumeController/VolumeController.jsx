@@ -16,14 +16,8 @@ const VolumeController = ({
   metadata,
   selectedVariable,
   exaggeration,
-  continuousVariable,
-  setContinuousVariable,
-  setIsosurfaceInfo,
   sections,
   setSections,
-  displayIsosurface,
-  isosurfaceValue,
-  setIsosurfaceValue,
   displaySections,
   dimensions,
   setDimensions,
@@ -81,20 +75,8 @@ const VolumeController = ({
     if (loaded && volumeRenderer && selectedVariable) {
       volumeRenderer.setActiveVariable(selectedVariable.id);
       
-      // Update continuous variable flag
-      const variable = metadata?.variables.find(v => v.id === selectedVariable.id);
-      setContinuousVariable(variable?.type === 'continuous');
-      
       // Update legend
       updateLegendInfo(selectedVariable.id);
-      
-      // Update isosurface info for continuous variables
-      if (variable?.type === 'continuous' && variable.range) {
-        const min = Math.round(variable.range.min);
-        const max = Math.round(variable.range.max);
-        setIsosurfaceInfo({ min, max });
-        setIsosurfaceValue(Math.floor((min + max) / 2));
-      }
     }
   }, [loaded, volumeRenderer, selectedVariable, metadata]);
 
@@ -104,14 +86,6 @@ const VolumeController = ({
       volumeRenderer.setVerticalExaggeration(exaggeration);
     }
   }, [loaded, volumeRenderer, exaggeration]);
-
-  // Handle isosurface display
-  useEffect(() => {
-    if (loaded && volumeRenderer) {
-      console.log('VolumeController: Setting isosurface enabled:', displayIsosurface, 'value:', isosurfaceValue);
-      volumeRenderer.setIsosurface(displayIsosurface, isosurfaceValue);
-    }
-  }, [loaded, volumeRenderer, displayIsosurface, isosurfaceValue]);
 
   // Handle sections
   useEffect(() => {
@@ -195,14 +169,8 @@ VolumeController.propTypes = {
   metadata: PropTypes.object,
   selectedVariable: PropTypes.object,
   exaggeration: PropTypes.number,
-  continuousVariable: PropTypes.bool,
-  setContinuousVariable: PropTypes.func,
-  setIsosurfaceInfo: PropTypes.func,
   sections: PropTypes.array,
   setSections: PropTypes.func,
-  displayIsosurface: PropTypes.bool,
-  isosurfaceValue: PropTypes.number,
-  setIsosurfaceValue: PropTypes.func,
   displaySections: PropTypes.bool,
   dimensions: PropTypes.array,
   setDimensions: PropTypes.func,

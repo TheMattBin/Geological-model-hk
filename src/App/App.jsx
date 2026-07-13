@@ -14,13 +14,9 @@ import * as styles from './App.module.css';
  */
 export const App = () => {
   const [selectedVariable, setSelectedVariable] = useState(variables[0]);
-  const [exaggeration, setExaggeration] = useState(15);
+  const [exaggeration, setExaggeration] = useState(1);
   const [legendInfo, setLegendInfo] = useState(null);
   const [sections, setSections] = useState([]);
-  const [continuousVariable, setContinuousVariable] = useState(null);
-  const [isosurfaceInfo, setIsosurfaceInfo] = useState(null);
-  const [displayIsosurface, setDisplayIsosurface] = useState(false);
-  const [isosurfaceValue, setIsosurfaceValue] = useState();
   const [displaySections, setDisplaySections] = useState(true);
   const [dimensions, setDimensions] = useState([]);
 
@@ -31,13 +27,6 @@ export const App = () => {
           <VolumeController
             selectedVariable={selectedVariable}
             exaggeration={exaggeration}
-            continuousVariable={continuousVariable}
-            setContinuousVariable={setContinuousVariable}
-            isosurfaceInfo={isosurfaceInfo}
-            setIsosurfaceInfo={setIsosurfaceInfo}
-            isosurfaceValue={isosurfaceValue}
-            setIsosurfaceValue={setIsosurfaceValue}
-            displayIsosurface={displayIsosurface}
             sections={sections}
             setSections={setSections}
             displaySections={displaySections}
@@ -65,12 +54,6 @@ export const App = () => {
                 setSelectedVariable={setSelectedVariable}
                 exaggeration={exaggeration}
                 setExaggeration={setExaggeration}
-                continuousVariable={continuousVariable}
-                isosurfaceInfo={isosurfaceInfo}
-                displayIsosurface={displayIsosurface}
-                setDisplayIsosurface={setDisplayIsosurface}
-                isosurfaceValue={isosurfaceValue}
-                setIsosurfaceValue={setIsosurfaceValue}
                 sections={sections}
                 setSections={setSections}
                 displaySections={displaySections}

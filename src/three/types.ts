@@ -79,6 +79,17 @@ export interface VolumeRendererOptions {
   onLoadingChange?: (loading: boolean) => void;
   /** Callback when an error occurs */
   onError?: (error: Error) => void;
+  /** Development-only frame performance callback */
+  onPerformanceChange?: (metrics: PerformanceMetrics) => void;
+}
+
+/** Runtime rendering metrics used by the development performance overlay. */
+export interface PerformanceMetrics {
+  fps: number;
+  frameTimeMs: number;
+  qualityTier: 'interaction' | 'balanced' | 'high';
+  raySteps: number;
+  pixelRatio: number;
 }
 
 /** Volume renderer state */

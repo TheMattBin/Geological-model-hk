@@ -23,6 +23,9 @@ import type {
 import { loadVolume, LoadedVolume, updateDiscreteTransferFunction } from './dataLoader';
 import { volumeVertexShader, volumeFragmentShader, debugVertexShader, debugFragmentShader } from './shaders';
 import type { DiscreteColor } from './types';
+import { AdaptiveQualityController } from './renderQuality.mjs';
+import { getCameraDistance, getNormalizedVolumeSize, validateVolumeMetadata } from './volumeGeometry.mjs';
+import type { PerformanceMetrics } from './types';
 
 export class VolumeRenderer {
   // Three.js core objects
@@ -43,18 +46,28 @@ export class VolumeRenderer {
   private state: VolumeRendererState;
   private animationFrameId: number | null = null;
   private container: HTMLElement;
-  
+  private resizeObserver: ResizeObserver | null = null;
+  private usesWindowResize = false;
+  private renderRequested = false;
+  private isInteracting = false;
+  private qualityRecoveryFrames = 0;
+  private cameraUniformDirty = true;
+  private disposed = false;
+
+  // Reused math objects avoid allocations in the render loop.
+  private cameraPosition = new THREE.Vector3();
+  private lastCameraPosition = new THREE.Vector3(Number.NaN, Number.NaN, Number.NaN);
+  private inverseVolumeMatrix = new THREE.Matrix4();
+
   // Callbacks
   private onLoadingChange?: (loading: boolean) => void;
   private onError?: (error: Error) => void;
-  
-  // Quality settings
-  private qualitySettings = {
-    low: { steps: 64, alphaScale: 0.5 },
-    medium: { steps: 128, alphaScale: 0.3 },
-    high: { steps: 256, alphaScale: 0.2 },
-  };
-  private quality: 'low' | 'medium' | 'high';
+  private onPerformanceChange?: (metrics: PerformanceMetrics) => void;
+
+  // Quality and performance tracking
+  private qualityController: AdaptiveQualityController;
+  private frameSamples: number[] = [];
+  private frameCount = 0;
   
   // Debug mode - set to true to use simple colored shader for debugging
   private debugMode = false;
@@ -63,7 +76,11 @@ export class VolumeRenderer {
     this.container = options.container;
     this.onLoadingChange = options.onLoadingChange;
     this.onError = options.onError;
-    this.quality = options.quality || 'high';
+    this.onPerformanceChange = options.onPerformanceChange;
+    this.qualityController = new AdaptiveQualityController({
+      devicePixelRatio: window.devicePixelRatio,
+      initialTier: options.quality === 'low' ? 'interaction' : options.quality === 'high' ? 'high' : 'balanced',
+    });
     
     console.log('VolumeRenderer: initializing with container', this.container);
     console.log('Container size:', this.container.clientWidth, 'x', this.container.clientHeight);
@@ -104,11 +121,20 @@ export class VolumeRenderer {
       throw error;
     }
     
-    // Handle resize
-    window.addEventListener('resize', this.handleResize);
-    
-    // Start render loop
-    this.animate();
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(this.handleResize);
+      this.resizeObserver.observe(this.container);
+    } else {
+      this.usesWindowResize = true;
+      window.addEventListener('resize', this.handleResize);
+    }
+
+    this.controls.addEventListener('start', this.handleInteractionStart);
+    this.controls.addEventListener('change', this.handleControlsChange);
+    this.controls.addEventListener('end', this.handleInteractionEnd);
+
+    // Start with one frame; subsequent frames are requested only while needed.
+    this.requestRender();
   }
   
   private createRenderer(transparent: boolean = true): THREE.WebGLRenderer {
@@ -118,7 +144,7 @@ export class VolumeRenderer {
     
     // Check WebGL support first
     const testCanvas = document.createElement('canvas');
-    const gl = testCanvas.getContext('webgl2') || testCanvas.getContext('webgl');
+    const gl = testCanvas.getContext('webgl2');
     if (!gl) {
       throw new Error('WebGL is not supported in this browser');
     }
@@ -126,12 +152,12 @@ export class VolumeRenderer {
     try {
       const renderer = new THREE.WebGLRenderer({
         canvas: canvas,
-        antialias: true,
+        antialias: false,
         alpha: transparent,
         powerPreference: 'high-performance',
       });
       
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(this.qualityController.pixelRatio);
       
       // Use container dimensions, fall back to window if container has no size yet
       const width = this.container.clientWidth || window.innerWidth;
@@ -194,26 +220,91 @@ export class VolumeRenderer {
       this.camera.aspect = width / height;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(width, height);
+      this.requestRender();
     }
   };
-  
-  private animate = (): void => {
+
+  private requestRender = (): void => {
+    if (this.disposed || this.animationFrameId !== null) return;
+
+    this.renderRequested = true;
     this.animationFrameId = requestAnimationFrame(this.animate);
-    
-    this.controls.update();
-    
-    // Update camera position uniform for ray marching (only if not in debug mode)
-    if (this.volumeMaterial && !this.debugMode && this.volumeMaterial.uniforms.cameraPos) {
-      const cameraPos = this.camera.position.clone();
-      // Transform camera position to volume local space
-      if (this.volumeMesh) {
-        const invMatrix = new THREE.Matrix4().copy(this.volumeMesh.matrixWorld).invert();
-        cameraPos.applyMatrix4(invMatrix);
-      }
-      this.volumeMaterial.uniforms.cameraPos.value.copy(cameraPos);
-    }
-    
+  };
+
+  private handleInteractionStart = (): void => {
+    this.isInteracting = true;
+    this.qualityController.update(16, true);
+    this.applyQualityProfile();
+    this.requestRender();
+  };
+
+  private handleControlsChange = (): void => {
+    this.cameraUniformDirty = true;
+    this.requestRender();
+  };
+
+  private handleInteractionEnd = (): void => {
+    this.isInteracting = false;
+    this.qualityRecoveryFrames = 60;
+    this.requestRender();
+  };
+
+  private applyQualityProfile = (): void => {
+    if (!this.volumeMaterial || this.debugMode) return;
+
+    this.volumeMaterial.uniforms.uSteps.value = this.qualityController.profile.steps;
+    this.renderer.setPixelRatio(this.qualityController.pixelRatio);
+    this.volumeMaterial.uniforms.uAlphaScale.value = this.qualityController.profile.tier === 'interaction' ? 0.5 : 0.3;
+  };
+
+  private updateCameraUniform = (): void => {
+    if (!this.volumeMaterial || this.debugMode || !this.volumeMaterial.uniforms.cameraPos || !this.volumeMesh) return;
+    if (!this.cameraUniformDirty && this.camera.position.equals(this.lastCameraPosition)) return;
+
+    this.cameraPosition.copy(this.camera.position);
+    this.volumeMesh.updateMatrixWorld();
+    this.inverseVolumeMatrix.copy(this.volumeMesh.matrixWorld).invert();
+    this.cameraPosition.applyMatrix4(this.inverseVolumeMatrix);
+    this.volumeMaterial.uniforms.cameraPos.value.copy(this.cameraPosition);
+    this.lastCameraPosition.copy(this.camera.position);
+    this.cameraUniformDirty = false;
+  };
+
+  private animate = (): void => {
+    this.animationFrameId = null;
+    if (this.disposed || !this.renderRequested) return;
+
+    this.renderRequested = false;
+    const frameStart = performance.now();
+    const controlsChanged = this.controls.update();
+    this.updateCameraUniform();
     this.renderer.render(this.scene, this.camera);
+
+    const frameTimeMs = performance.now() - frameStart;
+    this.frameSamples.push(frameTimeMs);
+    this.frameCount += 1;
+    if (this.frameSamples.length > 30) this.frameSamples.shift();
+
+    const nextProfile = this.qualityController.update(frameTimeMs, this.isInteracting);
+    const currentSteps = this.volumeMaterial && !this.debugMode ? this.volumeMaterial.uniforms.uSteps.value : -1;
+    if (nextProfile.steps !== currentSteps) {
+      this.applyQualityProfile();
+    }
+
+    if (this.onPerformanceChange && this.frameCount % 30 === 0) {
+      const averageFrameTime = this.frameSamples.reduce((sum, value) => sum + value, 0) / this.frameSamples.length;
+      this.onPerformanceChange({
+        fps: averageFrameTime > 0 ? 1000 / averageFrameTime : 0,
+        frameTimeMs: averageFrameTime,
+        qualityTier: this.qualityController.profile.tier,
+        raySteps: this.qualityController.profile.steps,
+        pixelRatio: this.qualityController.pixelRatio,
+      });
+    }
+
+    const shouldContinueRendering = this.isInteracting || controlsChanged || this.qualityRecoveryFrames > 0;
+    if (!this.isInteracting && this.qualityRecoveryFrames > 0) this.qualityRecoveryFrames -= 1;
+    if (shouldContinueRendering) this.requestRender();
   };
   
   /**
@@ -234,6 +325,7 @@ export class VolumeRenderer {
       
       // Position camera based on volume bounds
       this.fitCameraToVolume();
+      this.requestRender();
       
       this.onLoadingChange?.(false);
     } catch (error) {
@@ -245,33 +337,33 @@ export class VolumeRenderer {
   
   private createVolumeMesh(): void {
     if (!this.loadedVolume || !this.metadata) return;
+
+    const metadataWarnings = validateVolumeMetadata(this.metadata);
+    metadataWarnings.forEach((warning) => console.warn(`Volume metadata: ${warning}`));
     
     // Remove existing mesh and wireframe
     if (this.volumeMesh) {
       this.scene.remove(this.volumeMesh);
       this.volumeMesh.geometry.dispose();
+      this.volumeMaterial?.dispose();
+      this.volumeMesh = null;
+      this.volumeMaterial = null;
     }
     
     // Remove old debug wireframe
     const oldWireframe = this.scene.getObjectByName('debugWireframe');
     if (oldWireframe) {
       this.scene.remove(oldWireframe);
+      if (oldWireframe instanceof THREE.LineSegments) {
+        oldWireframe.geometry.dispose();
+        (oldWireframe.material as THREE.Material).dispose();
+      }
     }
     
-    // Calculate volume size from bounds or use unit cube
-    const bounds = this.metadata.bounds;
-    const size = new THREE.Vector3(
-      bounds.x ? bounds.x.max - bounds.x.min : this.metadata.dimensions.x,
-      bounds.y ? bounds.y.max - bounds.y.min : this.metadata.dimensions.y,
-      bounds.z ? bounds.z.max - bounds.z.min : this.metadata.dimensions.z
-    );
-    
-    // Normalize to reasonable display size
-    const maxDim = Math.max(size.x, size.y, size.z);
-    size.divideScalar(maxDim);
-    
-    // Apply vertical exaggeration
-    size.z *= this.state.verticalExaggeration;
+    // Keep shader bounds in the un-exaggerated local coordinate system. The
+    // display-only Z scale is applied to the mesh below.
+    const normalizedSize = getNormalizedVolumeSize(this.metadata);
+    const size = new THREE.Vector3(normalizedSize.x, normalizedSize.y, normalizedSize.z);
     
     console.log('Creating volume mesh with size:', size.x, size.y, size.z);
     console.log('Metadata:', this.metadata);
@@ -294,9 +386,6 @@ export class VolumeRenderer {
         depthWrite: true,
       });
     } else {
-      // Get quality settings
-      const qualityConfig = this.qualitySettings[this.quality];
-      
       // Get active variable
       const activeVar = this.metadata.variables.find(v => v.id === this.state.activeVariableId);
       const isDiscrete = activeVar?.type === 'discrete';
@@ -322,8 +411,8 @@ export class VolumeRenderer {
           )},
           uBoundsMin: { value: boundsMin },
           uBoundsMax: { value: boundsMax },
-          uSteps: { value: qualityConfig.steps },
-          uAlphaScale: { value: qualityConfig.alphaScale },
+          uSteps: { value: this.qualityController.profile.steps },
+          uAlphaScale: { value: this.qualityController.profile.tier === 'interaction' ? 0.5 : 0.3 },
           uBrightness: { value: 1.5 },
           cameraPos: { value: new THREE.Vector3() },
           
@@ -364,37 +453,27 @@ export class VolumeRenderer {
     console.log('Shader material created:', this.volumeMaterial);
     
     this.volumeMesh = new THREE.Mesh(geometry, this.volumeMaterial);
+    this.volumeMesh.scale.z = this.state.verticalExaggeration;
     this.scene.add(this.volumeMesh);
-    
-    // Add wireframe bounding box for debugging
-    const wireGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
-    const wireframe = new THREE.WireframeGeometry(wireGeometry);
-    const line = new THREE.LineSegments(wireframe, new THREE.LineBasicMaterial({ color: 0x00ff00 }));
-    line.name = 'debugWireframe';
-    this.scene.add(line);
-    
+
+    this.cameraUniformDirty = true;
     console.log('Volume mesh created and added to scene');
     console.log('Scene children:', this.scene.children);
   }
   
   private fitCameraToVolume(): void {
     if (!this.metadata) return;
-    
-    // Position camera to see the whole volume
-    const bounds = this.metadata.bounds;
-    const size = new THREE.Vector3(
-      bounds.x ? bounds.x.max - bounds.x.min : this.metadata.dimensions.x,
-      bounds.y ? bounds.y.max - bounds.y.min : this.metadata.dimensions.y,
-      bounds.z ? bounds.z.max - bounds.z.min : this.metadata.dimensions.z
-    );
-    
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const distance = 2.5;
-    
-    this.camera.position.set(distance, distance * 0.8, distance * 0.6);
+
+    const size = getNormalizedVolumeSize(this.metadata, this.state.verticalExaggeration);
+    const distance = getCameraDistance(size, this.camera.fov);
+    const direction = new THREE.Vector3(1, 0.8, 0.6).normalize();
+
+    this.camera.position.copy(direction).multiplyScalar(distance);
     this.camera.lookAt(0, 0, 0);
     this.controls.target.set(0, 0, 0);
     this.controls.update();
+    this.cameraUniformDirty = true;
+    this.requestRender();
   }
   
   /**
@@ -435,27 +514,40 @@ export class VolumeRenderer {
     this.volumeMaterial.uniforms.uDiscreteMode.value = variable.type === 'discrete';
     this.volumeMaterial.uniforms.uNumClasses.value = variable.numClasses || 256;
     
-    // Force texture update 
-    if (volumeTexture) {
-      volumeTexture.needsUpdate = true;
-    }
-    if (transferTexture) {
-      transferTexture.needsUpdate = true;
-    }
-    
-    // Mark material as needing update
-    this.volumeMaterial.needsUpdate = true;
-    
     console.log('setActiveVariable: uniforms updated, discreteMode:', variable.type === 'discrete', 'numClasses:', variable.numClasses || 256);
+    this.requestRender();
   }
   
   /**
    * Set vertical exaggeration
    */
   setVerticalExaggeration(value: number): void {
+    const previousExaggeration = this.state.verticalExaggeration;
     this.state.verticalExaggeration = value;
-    // Recreate mesh with new exaggeration
-    this.createVolumeMesh();
+    if (this.volumeMesh) {
+      this.volumeMesh.scale.z = value;
+      this.volumeMesh.updateMatrixWorld();
+      this.cameraUniformDirty = true;
+    }
+
+    if (this.metadata && previousExaggeration !== value) {
+      const previousSize = getNormalizedVolumeSize(this.metadata, previousExaggeration);
+      const nextSize = getNormalizedVolumeSize(this.metadata, value);
+      const previousDistance = getCameraDistance(previousSize, this.camera.fov);
+      const nextDistance = getCameraDistance(nextSize, this.camera.fov);
+      const cameraOffset = this.camera.position.clone().sub(this.controls.target);
+
+      if (cameraOffset.lengthSq() > 0 && previousDistance > 0) {
+        cameraOffset.multiplyScalar(nextDistance / previousDistance);
+        this.camera.position.copy(this.controls.target).add(cameraOffset);
+        this.camera.lookAt(this.controls.target);
+        this.controls.update();
+      } else {
+        this.fitCameraToVolume();
+      }
+    }
+
+    this.requestRender();
   }
   
   /**
@@ -479,6 +571,7 @@ export class VolumeRenderer {
     if (max !== undefined) {
       this.volumeMaterial.uniforms[`uSlice${axisUpper}Max`].value = max;
     }
+    this.requestRender();
   }
   
   /**
@@ -500,6 +593,7 @@ export class VolumeRenderer {
     if (position !== undefined) {
       this.volumeMaterial.uniforms[`uSection${orientation}Position`].value = position;
     }
+    this.requestRender();
   }
   
   /**
@@ -532,6 +626,7 @@ export class VolumeRenderer {
     if (color) {
       this.volumeMaterial.uniforms.uIsosurfaceColor.value.set(color[0], color[1], color[2]);
     }
+    this.requestRender();
   }
   
   /**
@@ -544,6 +639,7 @@ export class VolumeRenderer {
     if (texture) {
       updateDiscreteTransferFunction(texture, colormap);
     }
+    this.requestRender();
   }
   
   /**
@@ -586,13 +682,19 @@ export class VolumeRenderer {
    * Dispose of all resources
    */
   dispose(): void {
-    // Stop animation
+    this.disposed = true;
+
+    // Stop the pending frame
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
     }
-    
-    // Remove event listener
-    window.removeEventListener('resize', this.handleResize);
+
+    this.resizeObserver?.disconnect();
+    if (this.usesWindowResize) window.removeEventListener('resize', this.handleResize);
+    this.controls.removeEventListener('start', this.handleInteractionStart);
+    this.controls.removeEventListener('change', this.handleControlsChange);
+    this.controls.removeEventListener('end', this.handleInteractionEnd);
     
     // Dispose Three.js objects
     if (this.volumeMesh) {
@@ -604,12 +706,8 @@ export class VolumeRenderer {
     
     // Dispose textures
     if (this.loadedVolume) {
-      for (const texture of this.loadedVolume.textures.values()) {
-        texture.dispose();
-      }
-      for (const texture of this.loadedVolume.transferFunctions.values()) {
-        texture.dispose();
-      }
+      for (const texture of this.loadedVolume.textures.values()) texture.dispose();
+      for (const texture of this.loadedVolume.transferFunctions.values()) texture.dispose();
     }
     
     this.controls.dispose();

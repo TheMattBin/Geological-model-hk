@@ -236,34 +236,36 @@ void main() {
     for (int i = 0; i < uSteps; i++) {
         // Check if within slice bounds
         if (isWithinSlices(pos)) {
-            // Sample raw value for isosurface detection
-            float currentValue = sampleVolumeValue(pos);
-            
-            // Isosurface detection (only for continuous data, when enabled)
-            if (uIsosurfaceEnabled && !uDiscreteMode && !isosurfaceHit && prevValue >= 0.0) {
-                // Check if we crossed the isosurface threshold
-                float threshold = uIsosurfaceValue;
-                if ((prevValue < threshold && currentValue >= threshold) ||
-                    (prevValue >= threshold && currentValue < threshold)) {
-                    // Found isosurface crossing - compute shading
-                    vec3 normal = computeGradient(pos, stepSize * 0.5);
-                    
-                    // Simple diffuse lighting
-                    vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
-                    float diffuse = max(dot(normal, lightDir), 0.0);
-                    float ambient = 0.3;
-                    float lighting = ambient + (1.0 - ambient) * diffuse;
-                    
-                    vec4 isoColor = vec4(uIsosurfaceColor * lighting, uIsosurfaceOpacity);
-                    
-                    // Composite isosurface
-                    isoColor.rgb *= isoColor.a;
-                    accumulatedColor = accumulatedColor + isoColor * (1.0 - accumulatedColor.a);
-                    isosurfaceHit = true;
+            // Isosurface detection is optional. Avoid the extra 3D texture
+            // read during ordinary volume rendering.
+            if (uIsosurfaceEnabled && !uDiscreteMode) {
+                float currentValue = sampleVolumeValue(pos);
+
+                if (!isosurfaceHit && prevValue >= 0.0) {
+                    // Check if we crossed the isosurface threshold
+                    float threshold = uIsosurfaceValue;
+                    if ((prevValue < threshold && currentValue >= threshold) ||
+                        (prevValue >= threshold && currentValue < threshold)) {
+                        // Found isosurface crossing - compute shading
+                        vec3 normal = computeGradient(pos, stepSize * 0.5);
+
+                        // Simple diffuse lighting
+                        vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+                        float diffuse = max(dot(normal, lightDir), 0.0);
+                        float ambient = 0.3;
+                        float lighting = ambient + (1.0 - ambient) * diffuse;
+
+                        vec4 isoColor = vec4(uIsosurfaceColor * lighting, uIsosurfaceOpacity);
+
+                        // Composite isosurface
+                        isoColor.rgb *= isoColor.a;
+                        accumulatedColor = accumulatedColor + isoColor * (1.0 - accumulatedColor.a);
+                        isosurfaceHit = true;
+                    }
                 }
+                prevValue = currentValue;
             }
-            prevValue = currentValue;
-            
+
             // Regular volume rendering (skip if only showing isosurface)
             if (!uIsosurfaceEnabled || uDiscreteMode) {
                 // Sample volume at current position

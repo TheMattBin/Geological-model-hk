@@ -16,6 +16,7 @@ const Scene3D = ({ children, dataPath = './data' }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [metadata, setMetadata] = useState(null);
+  const [performanceMetrics, setPerformanceMetrics] = useState(null);
 
   // Initialize the volume renderer after container has dimensions
   useEffect(() => {
@@ -68,8 +69,9 @@ const Scene3D = ({ children, dataPath = './data' }) => {
         renderer = new VolumeRenderer({
           container: container,
           transparent: true,
-          quality: 'high',
+          quality: 'medium',
           onLoadingChange: setLoading,
+          onPerformanceChange: import.meta.env.DEV ? setPerformanceMetrics : undefined,
           onError: (err) => {
             console.error('Volume renderer error:', err);
             setError(err.message);
@@ -122,6 +124,12 @@ const Scene3D = ({ children, dataPath = './data' }) => {
       <div className={styles.sceneContainer} ref={containerRef}>
         {loading && <div className={styles.loading}>Loading volume data...</div>}
         {error && <div className={styles.error}>{error}</div>}
+        {import.meta.env.DEV && performanceMetrics && (
+          <div className={styles.performance} aria-label='Renderer performance'>
+            {performanceMetrics.fps.toFixed(0)} FPS · {performanceMetrics.frameTimeMs.toFixed(1)} ms ·{' '}
+            {performanceMetrics.qualityTier} · {performanceMetrics.raySteps} steps
+          </div>
+        )}
       </div>
       {/* Pass volumeRenderer to children */}
       {Children.map(children, (child) => {

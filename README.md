@@ -19,7 +19,7 @@ A sophisticated 3D web application showcasing Hong Kong's geological model using
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 18.2.0 with Vite 6.x
-- **3D Visualization**: Three.js 0.160.0 with WebGL2
+- **3D Visualization**: Three.js 0.185.1 with WebGL2
 - **Volume Rendering**: Custom GLSL ray marching shaders
 - **State Management**: React Context API
 - **Styling**: CSS Modules with custom themes
@@ -66,6 +66,7 @@ Navigate to [http://localhost:3000](http://localhost:3000)
 | `npm run dev` | Start development server on localhost:3000 |
 | `npm run build` | Build for production (creates `/dist` folder) |
 | `npm run preview` | Preview production build locally |
+| `npm test` | Run renderer quality policy tests |
 | `npm run convert-sample` | Generate sample voxel data |
 
 ## 📊 Data Format

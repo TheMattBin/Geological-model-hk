@@ -15,12 +15,6 @@ const VisualizationPanel = ({
   setExaggeration,
   sections,
   setSections,
-  continuousVariable,
-  isosurfaceInfo,
-  isosurfaceValue,
-  setIsosurfaceValue,
-  displayIsosurface,
-  setDisplayIsosurface,
   displaySections,
   setDisplaySections,
   dimensions
@@ -73,35 +67,6 @@ const VisualizationPanel = ({
         ))}
       </div>
 
-      {continuousVariable && isosurfaceInfo && (
-        <div className={styles.surfaces}>
-          <label className={styles.switchLabel}>
-            <span>Display isosurface ({selectedVariable.unit})</span>
-            <input
-              type="checkbox"
-              checked={displayIsosurface}
-              onChange={(e) => setDisplayIsosurface(e.target.checked)}
-              className={styles.toggleSwitch}
-            />
-          </label>
-          {displayIsosurface && (
-            <>
-              <img className={styles.surfaceGraphic} src='./assets/surface.png' alt="Isosurface" />
-              <input
-                type="range"
-                className={styles.slider}
-                min={isosurfaceInfo.min}
-                max={isosurfaceInfo.max}
-                step={isosurfaceInfo.max - isosurfaceInfo.min < 10 ? 0.2 : 1}
-                value={isosurfaceValue || isosurfaceInfo.min}
-                onChange={(e) => setIsosurfaceValue(Number(e.target.value))}
-              />
-              <span className={styles.sliderValue}>{isosurfaceValue}</span>
-            </>
-          )}
-        </div>
-      )}
-
       <div className={styles.dynamicSections}>
           <label className={styles.switchLabel}>
             <span>Display sections</span>
@@ -147,7 +112,7 @@ const VisualizationPanel = ({
           type="range"
           className={styles.slider}
           min={1}
-          max={20}
+          max={5}
           step={1}
           value={exaggeration}
           onChange={(e) => setExaggeration(Number(e.target.value))}
@@ -165,12 +130,6 @@ VisualizationPanel.propTypes = {
   setExaggeration: PropTypes.func,
   sections: PropTypes.array,
   setSections: PropTypes.func,
-  continuousVariable: PropTypes.bool,
-  isosurfaceInfo: PropTypes.object,
-  isosurfaceValue: PropTypes.number,
-  setIsosurfaceValue: PropTypes.func,
-  displayIsosurface: PropTypes.bool,
-  setDisplayIsosurface: PropTypes.func,
   displaySections: PropTypes.bool,
   setDisplaySections: PropTypes.func,
   dimensions: PropTypes.array,
